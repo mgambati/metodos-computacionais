@@ -28,18 +28,26 @@ int GetOpPrecedence(char token) {
     return op_info[token].precedence;
 };
 
-
 bool IsDigitOrDot(char c) {
     return isdigit(c) || c == '.';
 }
 
+bool OpHasHigherPrecedence(char first, char second) {
+    return GetOpPrecedence(first) > GetOpPrecedence(second);
+}
 
-string FindNumberInString(string expr, int from_position, int *ends_in) {
-    string number;
+string FindNumberOrFuncInString(string expr, int from_position, int *ends_in) {
 
+    // verifica se é uma função
+    // sin, cos, log
+    string fn3 = expr.substr(from_position, 3);
+    if (fn3 == "sin" || fn3 == "cos" || fn3 == "log") {
+        *ends_in = from_position + 3;
+        return fn3;
+    }
+
+    string number = "";
     while (from_position < expr.length() && IsDigitOrDot(expr[from_position])) {
-        if (!IsDigitOrDot(expr[from_position]))
-            break;
         number += expr[from_position];
         from_position++;
     }
@@ -57,7 +65,7 @@ queue<string> ParseExpression(string expr) {
     int count = 0;
     while (count < expr.length()) {
         int ends_in_pos;
-        string num_token = FindNumberInString(expr, count, &ends_in_pos);
+        string num_token = FindNumberOrFuncInString(expr, count, &ends_in_pos);
         char token = expr[count];
 
         // se for número, adicione a fila de saída
@@ -76,7 +84,7 @@ queue<string> ParseExpression(string expr) {
             op_stack.pop();
             count++;
         } else {
-            while (IsTokenOp(token) && !op_stack.empty() && GetOpPrecedence(op_stack.top()) > GetOpPrecedence(token)) {
+            while (IsTokenOp(token) && !op_stack.empty() && OpHasHigherPrecedence(op_stack.top(), token)) {
                 output_queue.push(string(1, op_stack.top()));
                 op_stack.pop();
             }
@@ -94,3 +102,4 @@ queue<string> ParseExpression(string expr) {
 
     return output_queue;
 }
+
