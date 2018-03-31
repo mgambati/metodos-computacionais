@@ -39,11 +39,16 @@ bool OpHasHigherPrecedence(char first, char second) {
 string FindNumberOrFuncInString(string expr, int from_position, int *ends_in) {
 
     // verifica se é uma função
-    // sin, cos, log
     string fn3 = expr.substr(from_position, 3);
     if (fn3 == "sin" || fn3 == "cos" || fn3 == "log") {
         *ends_in = from_position + 3;
         return fn3;
+    }
+
+    string fn2 = expr.substr(from_position, 2);
+    if (fn2 == "ln" || fn2 == "tg") {
+        *ends_in = from_position + 2;
+        return fn2;
     }
 
     string number = "";
