@@ -13,7 +13,7 @@ int main() {
     queue<string> result = ParseExpression(formula);
 
     while (!result.empty()) {
-        cout << result.front();
+        cout << result.front() + " ";
         result.pop();
     }
 

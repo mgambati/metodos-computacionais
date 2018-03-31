@@ -7,7 +7,7 @@ using namespace std;
 
 bool IsDigitOrDot(char c);
 
-string FindNumberInString(string expr, int *from_position);
+string FindNumberInString(string expr, int from_position, int *ends_in);
 
 queue<string> ParseExpression(string expr);
 
