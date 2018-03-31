@@ -1,5 +1,5 @@
 #include <iostream>
-#include <queue>
+#include <stack>
 #include "formula_parser.h"
 
 using namespace std;
@@ -10,10 +10,10 @@ int main() {
 
     cin >> formula;
 
-    queue<string> result = ParseExpression(formula);
+    stack<string> result = ParseExpressionToRPN(formula);
 
     while (!result.empty()) {
-        cout << result.front() + " ";
+        cout << result.top() + " ";
         result.pop();
     }
 

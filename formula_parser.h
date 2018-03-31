@@ -11,6 +11,6 @@ bool OpHasHigherPrecedence(char first, char second);
 
 string FindNumberOrFuncInString(string expr, int from_position, int *ends_in);
 
-queue<string> ParseExpression(string expr);
+stack<string> ParseExpressionToRPN(string expr);
 
 #endif //METODOS_COMP_CMAKE_FORMULA_PARSER_H

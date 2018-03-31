@@ -1,5 +1,4 @@
 #include <string>
-#include <queue>
 #include <iostream>
 #include <map>
 #include <stack>
@@ -63,8 +62,9 @@ string FindNumberOrFuncInString(string expr, int from_position, int *ends_in) {
     return number;
 }
 
-queue<string> ParseExpression(string expr) {
-    queue<string> output_queue;
+
+stack<string> ParseExpressionToRPN(string expr) {
+    stack<string> output_stack;
     stack<char> op_stack;
 
     int count = 0;
@@ -75,13 +75,13 @@ queue<string> ParseExpression(string expr) {
 
         // se for número, adicione a fila de saída
         if (!num_token.empty()) {
-            output_queue.push(num_token);
+            output_stack.push(num_token);
             count = ends_in_pos;
         } else if (token == ')') {
 
             // mova todos os operadores da pilha até fila enquanto não aparecer um '('
             while (op_stack.top() != '(') {
-                output_queue.push(string(1, op_stack.top()));
+                output_stack.push(string(1, op_stack.top()));
                 op_stack.pop();
             }
 
@@ -90,7 +90,7 @@ queue<string> ParseExpression(string expr) {
             count++;
         } else {
             while (IsTokenOp(token) && !op_stack.empty() && OpHasHigherPrecedence(op_stack.top(), token)) {
-                output_queue.push(string(1, op_stack.top()));
+                output_stack.push(string(1, op_stack.top()));
                 op_stack.pop();
             }
 
@@ -101,10 +101,16 @@ queue<string> ParseExpression(string expr) {
 
     // esvazia a pilha de operadores e colocando-os na fila
     while (!op_stack.empty()) {
-        output_queue.push(string(1, op_stack.top()));
+        output_stack.push(string(1, op_stack.top()));
         op_stack.pop();
     }
 
-    return output_queue;
+    stack<string> reversed_output;
+    while (!output_stack.empty()) {
+        reversed_output.push(output_stack.top());
+        output_stack.pop();
+    }
+
+    return reversed_output;
 }
 
