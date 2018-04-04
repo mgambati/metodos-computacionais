@@ -10,12 +10,10 @@ int main() {
 
     cin >> formula;
 
-    stack<string> result = ParseExpressionToRPN(formula);
+    stack<string> rpn_expr = ParseExpressionToRPN(formula);
+    double result = SolveRPNExpression(rpn_expr, 0);
 
-    while (!result.empty()) {
-        cout << result.top() + " ";
-        result.pop();
-    }
-
+    cout << result << endl;
+//    cout << cos(1* M_PI/2) <<endl;
     return 0;
 }

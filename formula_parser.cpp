@@ -1,6 +1,7 @@
 #include <string>
 #include <map>
 #include <stack>
+#include <cmath>
 #include "formula_parser.h"
 
 using namespace std;
@@ -28,13 +29,18 @@ map<string, TokenInfo> fn_info{
         {"tg",  {1, false}}
 };
 
+map<string, TokenInfo> const_info{
+        {"e",  {1, false}},
+        {"pi", {1, false}},
+};
+
 /**
  * Verifica se a token é um operador
  * @param token
  * @return
  */
 bool IsTokenOp(string token) {
-    return op_info.find(token) != op_info.end();
+    return op_info.count(token) > 0;
 }
 
 /**
@@ -43,12 +49,28 @@ bool IsTokenOp(string token) {
  * @return
  */
 bool IsTokenFn(string token) {
-    return fn_info.find(token) != fn_info.end();
+    return fn_info.count(token) > 0;
+}
+
+/**
+ * Verifica se token é uma variável
+ * @param token
+ * @return
+ */
+bool IsTokenConst(string token) {
+    return const_info.count(token) > 0;
 }
 
 int GetOpPrecedence(string token) {
     return op_info[token].precedence;
 };
+
+double GetConstValue(string token) {
+    if (token == "pi")
+        return M_PI;
+    else if (token == "e")
+        return M_E;
+}
 
 /**
  * Retorn true se o first tiver precedencia maior
@@ -71,7 +93,7 @@ string SearchForNonNumericToken(string expr, int from_position, int *ends_in) {
     int fn_token_size = 1;
     while (fn_token_size <= 3) {
         string token = expr.substr(from_position, fn_token_size);
-        if (IsTokenOp(token) || IsTokenFn(token)) {
+        if (IsTokenOp(token) || IsTokenFn(token) || IsTokenConst(token) || token == "x") {
             *ends_in = from_position + fn_token_size;
             return token;
         }
@@ -101,7 +123,6 @@ string SearchForNumericToken(string expr, int from_position, int *ends_in) {
         *ends_in = from_position;
 
     return number;
-
 }
 
 /**
@@ -187,6 +208,80 @@ stack<string> ParseExpressionToRPN(string expr) {
     }
 
     return reversed_output;
+}
+
+double SolveUnaryOperation(string op, double x) {
+    if (op == "sin")
+        return sin(x);
+    else if (op == "cos")
+        return cos(x);
+    else if (op == "tg")
+        return tan(x);
+    else if (op == "log")
+        return log10(x);
+
+
+    return log(x); // ln
+}
+
+double SolveBinaryOperation(string op, double x, double y) {
+    if (op == "+")
+        return x + y;
+    else if (op == "-")
+        return x - y;
+    else if (op == "*")
+        return x * y;
+    else if (op == "/")
+        return x / y;
+
+    return pow(x, y);
+}
+
+double SolveRPNExpression(stack<string> expr_stack, double x_value) {
+    stack<double> aux_stack;
+
+    while (!expr_stack.empty()) {
+        string token = expr_stack.top();
+
+        // operadores binarios
+        if (IsTokenOp(token)) {
+            double y = aux_stack.top();
+            aux_stack.pop();
+
+            double x = aux_stack.top();
+            aux_stack.pop();
+
+            aux_stack.push(SolveBinaryOperation(token, x, y));
+            expr_stack.pop();
+        }
+
+            // Operadores unários
+        else if (IsTokenFn(expr_stack.top())) {
+            double x = aux_stack.top();
+            aux_stack.pop();
+
+            aux_stack.push(SolveUnaryOperation(token, x));
+            expr_stack.pop();
+        }
+
+            // Tokens numéricas são convertidas para double.
+        else {
+            double x;
+            if (token == "x") {
+                x = x_value;
+            } else if (IsTokenConst(token)) {
+                x = GetConstValue(token);
+            } else {
+                x = stod(token);
+            }
+            expr_stack.pop();
+
+            aux_stack.push(x);
+        }
+
+    }
+
+    return aux_stack.top();
 }
 
 
