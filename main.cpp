@@ -11,8 +11,13 @@ int main() {
     cin >> formula;
 
     stack<string> rpn_expr = ParseExpressionToRPN(formula);
-    double result = SolveRPNExpression(rpn_expr, 0);
 
+    cout << "Valor de x:" << endl;
+
+    double x;
+    cin >> x;
+
+    double result = SolveRPNExpression(rpn_expr, x);
     cout << result << endl;
     return 0;
 }
