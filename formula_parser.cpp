@@ -3,83 +3,15 @@
 #include <stack>
 #include <cmath>
 #include "formula_parser.h"
+#include "TokenRepository.h"
 
 using namespace std;
-
-struct TokenInfo {
-    int precedence;
-    bool left_associative;
-};
-
-map<string, TokenInfo> op_info{
-        {"+", {2, true}},
-        {"-", {2, true}},
-        {"/", {3, true}},
-        {"*", {3, true}},
-        {"^", {4, false}},
-};
-
-map<string, TokenInfo> fn_info{
-        {"(",   {1, false}},
-        {")",   {1, false}},
-        {"cos", {1, false}},
-        {"sin", {1, false}},
-        {"log", {1, false}},
-        {"ln",  {1, false}},
-        {"tg",  {1, false}}
-};
-
-map<string, TokenInfo> const_info{
-        {"e",  {1, false}},
-        {"pi", {1, false}},
-};
-
-/**
- * Verifica se a token é um operador
- * @param token
- * @return
- */
-bool IsTokenOp(string token) {
-    return op_info.count(token) > 0;
-}
-
-/**
- * Verifica se token é uma função matemática
- * @param token
- * @return
- */
-bool IsTokenFn(string token) {
-    return fn_info.count(token) > 0;
-}
-
-/**
- * Verifica se token é uma variável
- * @param token
- * @return
- */
-bool IsTokenConst(string token) {
-    return const_info.count(token) > 0;
-}
-
-int GetOpPrecedence(string token) {
-    return op_info[token].precedence;
-};
 
 double GetConstValue(string token) {
     if (token == "pi")
         return M_PI;
-    else if (token == "e")
-        return M_E;
-}
 
-/**
- * Retorn true se o first tiver precedencia maior
- * @param first
- * @param second
- * @return
- */
-bool OpHasHigherPrecedence(string first, string second) {
-    return GetOpPrecedence(first) > GetOpPrecedence(second);
+    return M_E;
 }
 
 /**
@@ -89,11 +21,12 @@ bool OpHasHigherPrecedence(string first, string second) {
  * @param ends_in
  * @return
  */
-string SearchForNonNumericToken(string expr, int from_position, int *ends_in) {
+string SearchForNonNumericToken(string *expr, int from_position, unsigned *ends_in) {
     int fn_token_size = 1;
     while (fn_token_size <= 3) {
-        string token = expr.substr(from_position, fn_token_size);
-        if (IsTokenOp(token) || IsTokenFn(token) || IsTokenConst(token) || token == "x") {
+        string token = expr->substr(from_position, fn_token_size);
+        if (TokenRepository::IsTokenOp(&token) || TokenRepository::IsTokenFn(&token) ||
+            TokenRepository::IsTokenConst(&token) || token == "x") {
             *ends_in = from_position + fn_token_size;
             return token;
         }
@@ -112,10 +45,10 @@ string SearchForNonNumericToken(string expr, int from_position, int *ends_in) {
  * @param ends_in
  * @return
  */
-string SearchForNumericToken(string expr, int from_position, int *ends_in) {
+string SearchForNumericToken(string *expr, unsigned from_position, unsigned *ends_in) {
     string number = "";
-    while (from_position < expr.length() && isdigit(expr[from_position]) || expr[from_position] == '.') {
-        number += expr[from_position];
+    while ((from_position < expr->length()) && (isdigit((*expr)[from_position]) || (*expr)[from_position] == '.')) {
+        number += (*expr)[from_position];
         from_position++;
     }
 
@@ -133,7 +66,7 @@ string SearchForNumericToken(string expr, int from_position, int *ends_in) {
  * @param is_number
  * @return
  */
-string SearchForToken(string expr, int from_position, int *ends_in, bool *is_number) {
+string SearchForToken(string *expr, unsigned from_position, unsigned *ends_in, bool *is_number) {
     // verifica se é uma token de fn
     string token = SearchForNonNumericToken(expr, from_position, ends_in);
     if (!token.empty())
@@ -161,12 +94,12 @@ stack<string> ParseExpressionToRPN(string expr) {
     stack<string> output_stack;
     stack<string> op_stack;
 
-    int count = 0;
+    unsigned count = 0;
     while (count < expr.length()) {
 
-        int token_ends_in_pos;
+        unsigned token_ends_in_pos;
         bool token_is_number = false;
-        string token = SearchForToken(expr, count, &token_ends_in_pos, &token_is_number);
+        string token = SearchForToken(&expr, count, &token_ends_in_pos, &token_is_number);
 
         // se for número, adicione a fila de saída
         if (token_is_number) {
@@ -185,7 +118,8 @@ stack<string> ParseExpressionToRPN(string expr) {
             count = token_ends_in_pos;
 
         } else {
-            while (IsTokenOp(token) && !op_stack.empty() && OpHasHigherPrecedence(op_stack.top(), token)) {
+            while (TokenRepository::IsTokenOp(&token) && !op_stack.empty() &&
+                   TokenRepository::OpHasHigherPrecedence(op_stack.top(), token)) {
                 output_stack.push(op_stack.top());
                 op_stack.pop();
             }
@@ -224,14 +158,14 @@ double SolveUnaryOperation(string op, double x) {
     return log(x); // ln
 }
 
-double SolveBinaryOperation(string op, double x, double y) {
-    if (op == "+")
+double SolveBinaryOperation(string *op, double x, double y) {
+    if (*op == "+")
         return x + y;
-    else if (op == "-")
+    else if (*op == "-")
         return x - y;
-    else if (op == "*")
+    else if (*op == "*")
         return x * y;
-    else if (op == "/")
+    else if (*op == "/")
         return x / y;
 
     return pow(x, y);
@@ -241,10 +175,10 @@ double SolveRPNExpression(stack<string> expr_stack, double x_value) {
     stack<double> aux_stack;
 
     while (!expr_stack.empty()) {
-        string token = expr_stack.top();
+        string *token = &expr_stack.top();
 
         // operadores binarios
-        if (IsTokenOp(token)) {
+        if (TokenRepository::IsTokenOp(token)) {
             double y = aux_stack.top();
             aux_stack.pop();
 
@@ -256,23 +190,23 @@ double SolveRPNExpression(stack<string> expr_stack, double x_value) {
         }
 
             // Operadores unários
-        else if (IsTokenFn(expr_stack.top())) {
+        else if (TokenRepository::IsTokenFn(&expr_stack.top())) {
             double x = aux_stack.top();
             aux_stack.pop();
 
-            aux_stack.push(SolveUnaryOperation(token, x));
+            aux_stack.push(SolveUnaryOperation(*token, x));
             expr_stack.pop();
         }
 
             // Tokens numéricas são convertidas para double.
         else {
             double x;
-            if (token == "x") {
+            if (*token == "x") {
                 x = x_value;
-            } else if (IsTokenConst(token)) {
-                x = GetConstValue(token);
+            } else if (TokenRepository::IsTokenConst(token)) {
+                x = GetConstValue(*token);
             } else {
-                x = stod(token);
+                x = stod(*token);
             }
             expr_stack.pop();
 

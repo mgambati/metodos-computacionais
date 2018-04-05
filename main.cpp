@@ -14,6 +14,5 @@ int main() {
     double result = SolveRPNExpression(rpn_expr, 0);
 
     cout << result << endl;
-//    cout << cos(1* M_PI/2) <<endl;
     return 0;
 }
