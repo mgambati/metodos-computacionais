@@ -43,7 +43,7 @@ stack<string> ParseExpressionToRPN(string expr) {
             count = token_ends_in_pos;
 
             // Evita que caso os parenteses sejam de uma função, ela seja deixada na pilha
-            if (IsTokenFn(op_stack.top())) {
+            if (IsTokenFn(op_stack.top()) && op_stack.top() != "(") {
                 output_stack.push(op_stack.top());
                 op_stack.pop();
             }
