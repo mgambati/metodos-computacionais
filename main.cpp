@@ -1,23 +1,28 @@
 #include <iostream>
 #include <stack>
-#include "formula_parser.h"
+#include "zero_of_function.h"
 
 using namespace std;
 
+void SelectionMenu() {
+    cout << "Bem vindo, escolha uma das opções." << endl;
+    cout << "1 - Calcular zero de funções" << endl;
+
+    int selected;
+    cin >> selected;
+
+    switch (selected) {
+        case 1:
+            ShowZeroMenu();
+            break;
+        default:
+            cout << "Saindo...";
+    }
+}
+
+
 int main() {
-    cout << "Digite uma fórmula:" << endl;
-    string formula;
+    SelectionMenu();
 
-    cin >> formula;
-
-    stack<string> rpn_expr = ParseExpressionToRPN(formula);
-
-    cout << "Valor de x:" << endl;
-
-    double x;
-    cin >> x;
-
-    double result = SolveRPNExpression(rpn_expr, x);
-    cout << result << endl;
     return 0;
 }
