@@ -111,6 +111,9 @@ void ShowZeroMenu() {
     cin >> selected;
 
     cout << "Insira uma fórmula para computar (ex: cos(3*pi/2)+x^2)" << endl;
+    cout << "Funções válidas: sin, cos, log (base 10), ln, tg" << endl;
+    cout << "Operadores válidos: +, -, /, *, ^" << endl;
+
     cin >> formula;
     parsed_formula = ParseExpressionToRPN(formula);
 

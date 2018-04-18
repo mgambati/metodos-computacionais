@@ -40,7 +40,7 @@ bool IsTokenOp(string token) {
  */
 bool IsTokenFn(string token) {
     static string fn_arr[]{
-            "(", ")", "cos", "sin", "tg", "log", "ln"
+            "(", ")", "cos", "sin", "tg", "log", "ln", "sqrt"
     };
 
     for (string item : fn_arr) {
@@ -109,7 +109,7 @@ bool CompareOpPrecedenceOrLA(string first, string second) {
  */
 string SearchForNonNumericToken(string expr, int from_position, int *ends_in) {
     int fn_token_size = 1;
-    while (fn_token_size <= 3) {
+    while (fn_token_size <= 4) {
         string token = expr.substr(from_position, fn_token_size);
         if (IsTokenOp(token) || IsTokenFn(token) || IsTokenConst(token)) {
             *ends_in = from_position + fn_token_size;

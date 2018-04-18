@@ -95,6 +95,8 @@ double SolveUnaryOperation(string op, double x) {
         return cos(x);
     if (op == "tg")
         return tan(x);
+    if (op == "sqrt")
+        return sqrt(x);
     if (op == "log")
         return log10(x);
 
