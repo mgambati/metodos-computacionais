@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include "termcolor.hpp"
 #include "interpolation.h"
 
@@ -29,22 +30,29 @@ void ShowInterpolationMenu() {
     }
 
     double xi;
-    cout << "Qual ponto Xi deseja calcular?" << endl;
-    cin >> xi;
 
     switch (selected) {
         case 1:
+            cout << "Qual ponto Xi deseja calcular?" << endl;
+            cin >> xi;
             InterpolateLagrange(points, xi);
             break;
         case 2:
+            cout << "Qual ponto Xi deseja calcular?" << endl;
+            cin >> xi;
             InterpolateLinearSpline(points, xi);
+            break;
+        case 3:
+            cout << "Qual angular \u03B8(x) deseja calcular? (entrada multiplicada por PI automaticamente)" << endl;
+            cin >> xi;
+            InterpolateTrigonometric(points, xi);
             break;
     }
 
 }
 
 
-void InterpolateLagrange(vector<Point> f, int xi) {
+void InterpolateLagrange(vector<Point> f, double xi) {
     double result = 0;
 
     for (int i = 0; i < f.size(); i++) {
@@ -81,8 +89,74 @@ void InterpolateLinearSpline(vector<Point> f, double x) {
 
     Point x0 = f[x0Index], x1 = f[x0Index + 1];
 
-    double result = x0.y * (x - x1.x) / (x0.x - x1.x) + x1.y * (x - x0.x)/ (x1.x - x0.x);
+    double result = x0.y * (x - x1.x) / (x0.x - x1.x) + x1.y * (x - x0.x) / (x1.x - x0.x);
 
     cout << "Usando o intervalo: [" << x0.x << ", " << x1.x << "]" << endl;
+    cout << "Resultado: f(" << x << ") = " << result << endl;
+}
+
+/**
+ * Calcula X[k] para pontos equidistantes
+ * @param k
+ * @param N
+ * @return
+ */
+double Xk(int k, int N) {
+    return k * 2 * M_PI / N;
+}
+
+/**
+ * Calcula A[j], usado para interpolação trigonometrica
+ * @param f
+ * @param j
+ * @return
+ */
+double A(vector<Point> f, int j) {
+    double result = 0;
+    for (int k = 0; k < f.size(); k++) {
+        result += f[k].y * cos(j * Xk(k, (int) f.size()));
+    }
+    result = (2.0 / f.size()) * result;
+    cout << "A" << j << ": " << result << endl;
+    return result;
+}
+
+/**
+ * Calcula B[j], usado para interpolação trigonometrica
+ * @param f
+ * @param j
+ * @return
+ */
+double B(vector<Point> f, int j) {
+    double result = 0;
+    for (int k = 0; k < f.size(); k++) {
+        result += f[k].y * sin(j * Xk(k, (int) f.size()));
+    }
+    result = (2.0 / f.size()) * result;
+    cout << "B" << j << ": " << result << endl;
+
+    return result;
+}
+
+
+void InterpolateTrigonometric(vector<Point> f, double x) {
+    double result = A(f, 0) / 2;
+    int m;
+
+    if (f.size() % 2) { // odd
+        m = (int) (f.size() - 1) / 2;
+        for (int k = 1; k <= m; ++k) {
+            result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
+        }
+
+    } else {
+        m = (int) f.size() / 2;
+        for (int k = 1; k < m; ++k) {
+            result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
+        }
+
+        result += (A(f, m) / 2) * cos(m * x);
+    }
+
     cout << "Resultado: f(" << x << ") = " << result << endl;
 }

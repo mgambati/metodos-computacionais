@@ -8,7 +8,12 @@ struct Point {
 };
 
 void ShowInterpolationMenu();
-void InterpolateLagrange(vector<Point> f, int xi);
+void InterpolateLagrange(vector<Point> f, double xi);
 int FindInterval(vector<Point> f, double x);
 void InterpolateLinearSpline(vector<Point> f, double x);
+
+double A(vector<Point> f, int j);
+double B(vector<Point> f, int j);
+void InterpolateTrigonometric(vector<Point> f, double x);
+
 #endif //METODOS_COMP_INTERPOLATION_H
