@@ -1,8 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <sstream>
+#include <string>
+#include <stack>
 #include "termcolor.hpp"
 #include "interpolation.h"
+#include "formula_parser.h"
 
 using namespace std;
 
@@ -35,6 +39,7 @@ void ShowInterpolationMenu() {
         case 1:
             cout << "Qual ponto Xi deseja calcular?" << endl;
             cin >> xi;
+            InterpolateLangrangeForFn(points);
             InterpolateLagrange(points, xi);
             break;
         case 2:
@@ -51,9 +56,91 @@ void ShowInterpolationMenu() {
 
 }
 
+vector<double> MultiplyPolynomials(vector<double> vector1, vector<double> vector2) {
+    vector<double> vector3(vector1.size() + vector2.size());
+
+    for (int i = 0; i < vector1.size(); ++i) {
+        for (int j = 0; j < vector2.size(); ++j) {
+            vector3[i + j] = vector3[i + j] + vector1[i] + vector2[j];
+        }
+    }
+    return vector3;
+}
+
+vector<double> SumVectors(vector<double> vector1, vector<double> vector2) {
+    vector<double> vector3(vector1.size());
+
+    for (int i = 0; i < vector1.size(); ++i) {
+        vector3[i] = vector1[i] + vector2[i];
+    }
+
+    return vector3;
+}
+
+void PrettyPrintPolynomial(vector<double> vector1) {
+    cout << termcolor::magenta << "f(x) = ";
+    for (int i = vector1.size() - 1; i > 0; --i) {
+        if (vector1[i] != 0.0) {
+            cout <<  vector1[i] << "*x^" << i;
+            if (i != 1)
+                cout << " + ";
+        }
+    }
+
+    cout << " + " << vector1[0] << endl << termcolor::reset;
+}
+
+
+double CalcDenominator(vector<Point> f, int i) {
+    double multipliyer = 1.0;
+    for (int j = 0; j < f.size(); ++j) {
+        if (j == i)
+            continue;
+        multipliyer = multipliyer * (f[i].x - f[j].x);
+    }
+    return multipliyer;
+}
+
+vector<double> CalcLagrangeFactor(vector<Point> f, int i) {
+    vector<double> vector1(2);
+    vector<double> vector2(f.size());
+    vector2[0] = 1.0;
+    double d = CalcDenominator(f, i);
+
+    for (int j = 0; j < f.size(); ++j) {
+        if (j == i)
+            continue;
+        vector1[0] = -1 * f[j].x;
+        vector1[1] = 1;
+
+        vector2 = MultiplyPolynomials(vector1, vector2);
+    }
+
+    for (int k = 0; k < f.size(); ++k) {
+        vector2[k] = vector2[k] / d;
+    }
+    return vector2;
+}
+
+void InterpolateLangrangeForFn(vector<Point> f) {
+    vector<double> partialPoly(f.size());
+    vector<double> finalPoly(f.size());
+
+    for (int i = 0; i < f.size(); ++i) {
+        partialPoly = CalcLagrangeFactor(f, i);
+
+        for (int j = 0; j < partialPoly.size(); ++j) {
+            partialPoly[j] = partialPoly[j] * f[i].y;
+        }
+        finalPoly = SumVectors(finalPoly, partialPoly);
+    }
+
+    PrettyPrintPolynomial(finalPoly);
+}
 
 void InterpolateLagrange(vector<Point> f, double xi) {
     double result = 0;
+    string resultStr;
 
     for (int i = 0; i < f.size(); i++) {
         double term = f[i].y;
@@ -141,22 +228,31 @@ double B(vector<Point> f, int j) {
 
 void InterpolateTrigonometric(vector<Point> f, double x) {
     double result = A(f, 0) / 2;
+    string resultStr;
     int m;
 
     if (f.size() % 2) { // odd
         m = (int) (f.size() - 1) / 2;
         for (int k = 1; k <= m; ++k) {
             result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
+            resultStr.append(
+                    to_string(A(f, k)) + "*cos(" + to_string(k) + "*x)+" + to_string(B(f, k)) + "*sin(" + to_string(k) +
+                    "*x)");
         }
 
     } else {
         m = (int) f.size() / 2;
         for (int k = 1; k < m; ++k) {
             result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
+            resultStr.append(
+                    to_string(A(f, k)) + "*cos(" + to_string(k) + "*x)+" + to_string(B(f, k)) + "*sin(" + to_string(k) +
+                    "*x)");
         }
 
         result += (A(f, m) / 2) * cos(m * x);
+        resultStr.append(to_string(A(f, m) / 2)) + "*cos(" + to_string(m) + "*x)";
     }
 
+    cout << "Resultado: f(x) = " << resultStr << endl;
     cout << "Resultado: f(" << x << ") = " << result << endl;
 }
