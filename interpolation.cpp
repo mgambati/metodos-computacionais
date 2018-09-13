@@ -301,17 +301,17 @@ void InterpolateNewtonForFn(vector<Point> f) {
     }
 
     string auxStr = "";
-    for (int ordem = 0; ordem < f.size() - 1; ordem++) {
+    for (int ord = 0; ord < f.size() - 1; ord++) {
         stringstream auxStrStream;
-        for (int i = 0; i < ordem + 1; i++) {
+        for (int i = 0; i < ord + 1; i++) {
             if (matrix1[0][i] >= 0)
                 auxStrStream << "(x - " << matrix1[0][i] << ")";
             else
                 auxStrStream << "(x + " << matrix1[0][i] * -1 << ")";
         }
-        auxStrStream << "(" << matrix2[0][ordem + 1] << ")";
+        auxStrStream << "(" << matrix2[0][ord + 1] << ")";
         auxStr += auxStrStream.str();
-        if (ordem < f.size() - 2)
+        if (ord < f.size() - 2)
             auxStr = auxStr + " + ";
     }
     cout << termcolor::magenta << "p(x) = " << matrix2[0][0] << " + " << auxStr << termcolor::reset << endl;
