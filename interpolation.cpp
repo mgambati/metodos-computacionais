@@ -45,12 +45,16 @@ void ShowInterpolationMenu() {
         case 2:
             cout << "Qual ponto Xi deseja calcular?" << endl;
             cin >> xi;
+            InterpolateLinearSplineForFn(points);
             InterpolateLinearSpline(points, xi);
             break;
         case 3:
             cout << "Qual angular \u03B8(x) deseja calcular? (entrada multiplicada por PI automaticamente)" << endl;
             cin >> xi;
             InterpolateTrigonometric(points, xi);
+            break;
+        case 4:
+            InterpolateNewtonForFn(points);
             break;
     }
 
@@ -81,7 +85,7 @@ void PrettyPrintPolynomial(vector<double> vector1) {
     cout << termcolor::magenta << "f(x) = ";
     for (int i = vector1.size() - 1; i > 0; --i) {
         if (vector1[i] != 0.0) {
-            cout <<  vector1[i] << "*x^" << i;
+            cout << vector1[i] << "*x^" << i;
             if (i != 1)
                 cout << " + ";
         }
@@ -170,6 +174,18 @@ int FindInterval(vector<Point> f, double x) {
     return lowIndex;
 }
 
+void InterpolateLinearSplineForFn(vector<Point> f) {
+    for (int i = 1; i < f.size(); ++i) {
+        cout <<termcolor::magenta << "S" << i << " = (";
+        double denominator = f[i].x - f[i - 1].x;
+
+        cout << (-1 * f[i - 1].y + f[i].y) / denominator << ")*x + (" <<
+                     ((f[i - 1].y * f[i].x) - (f[i].y * f[i - 1].x)) / denominator << ")";
+
+        cout << termcolor::reset << endl;
+    }
+}
+
 void InterpolateLinearSpline(vector<Point> f, double x) {
     int x0Index;
     x0Index = FindInterval(f, x);
@@ -204,7 +220,6 @@ double A(vector<Point> f, int j) {
         result += f[k].y * cos(j * Xk(k, (int) f.size()));
     }
     result = (2.0 / f.size()) * result;
-    cout << "A" << j << ": " << result << endl;
     return result;
 }
 
@@ -220,7 +235,6 @@ double B(vector<Point> f, int j) {
         result += f[k].y * sin(j * Xk(k, (int) f.size()));
     }
     result = (2.0 / f.size()) * result;
-    cout << "B" << j << ": " << result << endl;
 
     return result;
 }
@@ -228,31 +242,77 @@ double B(vector<Point> f, int j) {
 
 void InterpolateTrigonometric(vector<Point> f, double x) {
     double result = A(f, 0) / 2;
-    string resultStr;
+    stringstream resultStream;
     int m;
 
     if (f.size() % 2) { // odd
         m = (int) (f.size() - 1) / 2;
         for (int k = 1; k <= m; ++k) {
             result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
-            resultStr.append(
-                    to_string(A(f, k)) + "*cos(" + to_string(k) + "*x)+" + to_string(B(f, k)) + "*sin(" + to_string(k) +
-                    "*x)");
+            resultStream << A(f, k) << "*cos(" << k << "*x)+" << B(f, k) << "*sin(" << k << "*x)";
         }
 
     } else {
         m = (int) f.size() / 2;
         for (int k = 1; k < m; ++k) {
             result += A(f, k) * cos(k * x) + B(f, k) * sin(k * x);
-            resultStr.append(
-                    to_string(A(f, k)) + "*cos(" + to_string(k) + "*x)+" + to_string(B(f, k)) + "*sin(" + to_string(k) +
-                    "*x)");
+            resultStream << A(f, k) << "*cos(" << k << "*x)+" << B(f, k) << "*sin(" << k << "*x)";
         }
 
         result += (A(f, m) / 2) * cos(m * x);
-        resultStr.append(to_string(A(f, m) / 2)) + "*cos(" + to_string(m) + "*x)";
+        resultStream << A(f, m) / 2 << "*cos(" << m << "*x)";
     }
 
-    cout << "Resultado: f(x) = " << resultStr << endl;
+    cout << termcolor::magenta << "Resultado: f(x) = " << resultStream.str() << termcolor::reset << endl;
     cout << "Resultado: f(" << x << ") = " << result << endl;
+}
+
+void InterpolateNewtonForFn(vector<Point> f) {
+    int max= 50;
+    double matrix1[max][max];
+    double matrix2[max][max];
+
+
+    // init matrix
+    for (int i = 0; i < (max - 1); i++) {
+        for (int j = 0; j < (max - 1); j++) {
+            matrix1[i][j] = -999;
+            matrix2[i][j] = -999;
+        }
+    }
+
+    // build matrix
+    for (int i = 0; i < f.size(); i++) {
+       matrix1[0][i] = f[i].x;
+       matrix1[1][i] = f[i].y;
+    }
+
+    for (int i = 0; i < f.size(); i++)
+        matrix2[i][0] = matrix1[1][i];
+
+    int line = (int) f.size(), aux = 0;
+    for (int ord = 1; ord < f.size(); ord++) {
+        line--;
+        aux = ord;
+        for (int j = 0; j < line; j++) {
+            matrix2[j][ord] = (matrix2[j + 1][ord - 1] - matrix2[j][ord - 1]) / (matrix1[0][aux] - matrix1[0][j]);
+            aux++;
+        }
+    }
+
+    string auxStr = "";
+    for (int ordem = 0; ordem < f.size() - 1; ordem++) {
+        stringstream auxStrStream;
+        for (int i = 0; i < ordem + 1; i++) {
+            if (matrix1[0][i] >= 0)
+                auxStrStream << "(x - " << matrix1[0][i] << ")";
+            else
+                auxStrStream << "(x + " << matrix1[0][i] * -1 << ")";
+        }
+        auxStrStream << "(" << matrix2[0][ordem + 1] << ")";
+        auxStr += auxStrStream.str();
+        if (ordem < f.size() - 2)
+            auxStr = auxStr + " + ";
+    }
+    cout << termcolor::magenta << "p(x) = " << matrix2[0][0] << " + " << auxStr << termcolor::reset << endl;
 }

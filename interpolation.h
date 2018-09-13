@@ -16,7 +16,9 @@ vector<double> SumVectors(vector<double> vector1, vector<double> vector2);
 vector<double> MultiplyPolynomials(vector<double> vector1, vector<double> vector2);
 void InterpolateLagrange(vector<Point> f, double xi);
 int FindInterval(vector<Point> f, double x);
+void InterpolateLinearSplineForFn(vector<Point> f);
 void InterpolateLinearSpline(vector<Point> f, double x);
+void InterpolateNewtonForFn(vector<Point> f);
 
 double A(vector<Point> f, int j);
 double B(vector<Point> f, int j);
